@@ -1,4 +1,5 @@
-using Printf: @printf
+import Printf: @printf
+import Humanize: digitsep
 
 Adena = Int
 
@@ -31,25 +32,22 @@ struct MarketValue
 end
 
 function Base.show(io::IO, mv::MarketValue)
-    println(io, "┌─────┬────────────────────────────────┬───────┬───────────┐")
-    println(io, "│ Exp │                           Name │   Pcs │     Value │")
-    println(io, "├─────┼────────────────────────────────┼───────┼───────────┤")
+    println(io, "┌─────┬────────────────────────────────┬───────┬──────────────┐")
+    println(io, "│ Exp │                           Name │   Pcs │        Value │")
+    println(io, "├─────┼────────────────────────────────┼───────┼──────────────┤")
     for (item, worth) in mv.positions
         decomposable = if isnothing(item.decompose) "-" else "+" end
-        @printf(io, "│  %s  │ %30s │ %5d │ %9d │", decomposable, item.name, worth.amount, worth.adena)
+        @printf(io, "│  %s  │ %30s │ %5d │ %12s │",
+            decomposable, item.name, worth.amount, digitsep(worth.adena))
         println(io)
     end
-    println(io, "└─────┴────────────────────────────────┴───────┴───────────┘")
-    @printf(io, "Total: %d", mv.total)
+    println(io, "└─────┴────────────────────────────────┴───────┴──────────────┘")
+    @printf(io, "Total: %s", digitsep(mv.total))
     println(io)
 end
 
 function expand_slot(slot::InvSlot)::Dict{InvItem, Worth}
-    if isnothing(slot.item.decompose)
-        Dict([])
-    else
-        Dict([InvSlot(item, amount) for (item, amount) in slot.item.decompose()])
-    end
+    Dict([InvSlot(item, amount) for (item, amount) in slot.item.decompose()])
 end
 
 function expand_slot(inventory::Inventory, item::InvItem)::Inventory
